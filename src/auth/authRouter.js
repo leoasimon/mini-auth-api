@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const { pool } = require("../persistence");
+const { authMiddleware } = require("./authMiddleware");
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ router.post("/signin", async (req, res) => {
 
   const { password, ...rest } = user;
 
-  const token = jwt.sign(rest, "secretPrivateKey");
+  const token = jwt.sign(rest, process.env.JWTSECRET);
 
   return res.json({
     token,
@@ -66,6 +67,12 @@ router.post("/signup", async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
+
+router.get('/authenticate', authMiddleware, (req, res) => {
+  return res.json({
+    user: req.user
+  })
+})
 
 module.exports = {
     authRouter: router

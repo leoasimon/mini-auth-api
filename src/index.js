@@ -1,12 +1,15 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 
-const { usersRouter } = require('./users/userRouter')
+const { usersRouter } = require("./users/userRouter");
 
 const { initDb } = require("./persistence");
 const { authRouter } = require("./auth/authRouter");
 
 const app = express();
+
+app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -21,7 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/", authRouter);
-app.use('/users', usersRouter);
+app.use("/users", usersRouter);
 
 const startApp = async () => {
   await initDb();

@@ -4,7 +4,7 @@ const authMiddleware = (req, res, next) => {
   const { auth_token } = req.headers;
 
   try {
-    const user = jwt.verify(auth_token, "secretPrivateKey");
+    const user = jwt.verify(auth_token, process.env.JWTSECRET);
 
     if (!user) {
       return res.status(403).json({
