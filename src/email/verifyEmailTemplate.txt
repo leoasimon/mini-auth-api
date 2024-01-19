@@ -1,0 +1,12 @@
+Email Verification - Mini Auth
+
+Dear User,
+
+Thank you for signing up with Mini Auth! To complete your registration, please copy/paste the link below to verify
+your email address:
+YOUR_VERIFICATION_LINK
+
+If you did not sign up for Mini Auth, you can ignore this email.
+
+Thank you,
+The Mini Auth Team

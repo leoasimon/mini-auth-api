@@ -2,6 +2,9 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
+const authService = require("./authService");
+const emailService = require("../email/emailService");
+
 const { pool } = require("../persistence");
 const { authMiddleware } = require("./authMiddleware");
 
@@ -40,40 +43,23 @@ router.post("/signin", async (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
+  const result = await authService.signup(req.body);
 
-  const existingUsers = await pool.query({
-    text: "SELECT * FROM users WHERE email = $1",
-    values: [email],
-  });
-
-  if (existingUsers.rowCount > 0) {
-    return res
-      .status(400)
-      .json({ error: "A user with this email adress already exists" });
+  if (result.error) {
+    return res.status(result.status).json({ error: result.error });
   }
 
-  const saltRounds = 10;
+  emailService.sendVerifyEmail(req.body.email);
 
-  const salt = await bcrypt.genSalt(saltRounds);
-  try {
-    const hash = await bcrypt.hash(password, salt);
-    const user = await pool.query({
-      text: "INSERT INTO users(email, password) VALUES($1, $2) RETURNING *",
-      values: [email, hash],
-    });
-    return res.json(user.rows[0]);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
+  return res.status(result.status).json(result.data);
 });
 
-router.get('/authenticate', authMiddleware, (req, res) => {
+router.get("/authenticate", authMiddleware, (req, res) => {
   return res.json({
-    user: req.user
-  })
-})
+    user: req.user,
+  });
+});
 
 module.exports = {
-    authRouter: router
-}
+  authRouter: router,
+};

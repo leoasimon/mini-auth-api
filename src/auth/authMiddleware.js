@@ -16,7 +16,6 @@ const authMiddleware = (req, res, next) => {
     req.user = user;
     next();
   } catch (e) {
-    console.log(e);
     return res.status(403).json({
       error:
         "Permission Denied: You are not authorized to access this resource.",

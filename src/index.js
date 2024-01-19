@@ -15,10 +15,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(bodyParser.json());
 
-app.get("/user/me", (req, res) => {
-  res.json(req.user);
-});
-
 app.get("/", (req, res) => {
   res.send("Hello mini Auth Api!!!!!");
 });
