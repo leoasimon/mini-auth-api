@@ -10,13 +10,13 @@ const initDb = async () => {
   });
 
   await pool.query({
-    text: "CREATE TABLE IF NOT EXISTS users (id serial primary key, email varchar(255), password varchar(255))",
-  })
+    text: "CREATE TABLE IF NOT EXISTS users (id serial primary key, email varchar(255) NOT NULL, password varchar(255) NOT NULL, hash varchar(255) NOT NULL, active BOOLEAN NOT NULL DEFAULT false)",
+  });
 
-  return ;
+  return;
 };
 
 module.exports = {
   initDb,
-  pool
-}
+  pool,
+};

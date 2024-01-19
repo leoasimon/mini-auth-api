@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendVerifyEmail = async (email) => {
+const sendVerifyEmail = async (email, hash) => {
   try {
     const [html, text] = await Promise.all([
       fs.readFile(`${__dirname}/verifyEmailTemplate.html`),
@@ -21,8 +21,14 @@ const sendVerifyEmail = async (email) => {
       from: "doNotReply@miniauth.com",
       to: email,
       subject: "Confirm Your Email Address for Mini auth",
-      text: "" + text,
-      html: "" + html,
+      text: ("" + text).replace(
+        "YOUR_VERIFICATION_LINK",
+        `${process.env.CLIENT_URL}/verify-email?email=${email}&hash=${hash}`
+      ),
+      html: ("" + html).replace(
+        "YOUR_VERIFICATION_LINK",
+        `${process.env.CLIENT_URL}/verify-email?email=${email}&hash=${hash}`
+      ),
     };
 
     transporter.sendMail(mailOptions, (err, info) => {
@@ -38,5 +44,5 @@ const sendVerifyEmail = async (email) => {
 };
 
 module.exports = {
-    sendVerifyEmail
-}
+  sendVerifyEmail,
+};
