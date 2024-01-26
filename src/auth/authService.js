@@ -114,8 +114,59 @@ const verifyEmail = async (email, hash) => {
   };
 };
 
+const forgotPassword = async (email) => {
+  const result = await pool.query({
+    text: "SELECT * FROM users WHERE email = $1",
+    values: [email],
+  });
+
+  if (result.rowCount === 0) {
+    return {
+      status: 404,
+      error: "No user associated with this email adress",
+    };
+  }
+
+  const token = jwt.sign({ email }, process.env.JWTSECRET, {
+    expiresIn: "1h",
+  });
+
+  return {
+    token,
+  };
+};
+
+const resetPassword = async (token, password) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWTSECRET);
+
+
+    const saltRounds = 10;
+  
+    const salt = bcrypt.genSaltSync(saltRounds);
+  
+    const pwdHash = bcrypt.hashSync(password, salt);
+  
+    const result = await pool.query({
+      text: "UPDATE users SET password = $1 WHERE email = $2",
+      values: [pwdHash, decoded.email],
+    });
+  
+    return {
+      status: 200,
+    };
+  } catch (err) {
+    return {
+      status: 400,
+      error: err.message,
+    };
+  }
+};
+
 module.exports = {
   signup,
   signin,
   verifyEmail,
+  forgotPassword,
+  resetPassword,
 };

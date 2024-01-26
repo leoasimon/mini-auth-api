@@ -49,6 +49,35 @@ router.post("/verify-email", async (req, res) => {
   return res.status(result.status).send();
 });
 
+router.post("/forgot-password", async (req, res) => {
+  const result = await authService.forgotPassword(req.body.email);
+
+  if (result.error) {
+    return res.status(result.status).json({
+      error: result.error,
+    });
+  }
+
+  emailService.sendResetPasswordEmail(req.body.email, result.token);
+
+  return res.status(200).send();
+});
+
+router.post("/reset-password", async (req, res) => {
+  const result = await authService.resetPassword(
+    req.query.token,
+    req.body.password
+  );
+
+  if (result.error) {
+    return res.status(result.status).json({
+      error: result.error,
+    });
+  }
+
+  return res.status(result.status).json(result.data);
+});
+
 module.exports = {
   authRouter: router,
 };
