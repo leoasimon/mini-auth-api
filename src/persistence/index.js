@@ -9,10 +9,6 @@ const initDb = async () => {
     port: 5432,
   });
 
-  await pool.query({
-    text: "CREATE TABLE IF NOT EXISTS users (id serial primary key, email varchar(255) NOT NULL, password varchar(255) NOT NULL, hash varchar(255) NOT NULL, active BOOLEAN NOT NULL DEFAULT false)",
-  });
-
   return;
 };
 

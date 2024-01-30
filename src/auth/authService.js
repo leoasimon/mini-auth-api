@@ -68,9 +68,9 @@ const signin = async (body) => {
     };
   }
 
-  const { password, active, ...rest } = user;
+  const { password, status, ...rest } = user;
 
-  if (!active) {
+  if (status === "pending_validation") {
     return {
       status: 400,
       error:
@@ -78,21 +78,31 @@ const signin = async (body) => {
     };
   }
 
-  const token = jwt.sign(rest, process.env.JWTSECRET);
+  if (status === "pending_password_reset") {
+    return {
+      status: 400,
+      error:
+        "Please check your inbox for a password reset email and follow the instructions to complete the password reset process.",
+    };
+  }
 
-  return {
-    data: {
-      token,
-      user: rest,
-    },
-    status: 200,
-  };
+  if (status === "active") {
+    const token = jwt.sign(rest, process.env.JWTSECRET);
+
+    return {
+      data: {
+        token,
+        user: rest,
+      },
+      status: 200,
+    };
+  }
 };
 
 const verifyEmail = async (email, hash) => {
   const result = await pool.query({
-    text: "SELECT * from users WHERE email=$1 AND hash=$2 AND active=$3",
-    values: [email, hash, false],
+    text: "SELECT * from users WHERE email=$1 AND hash=$2 AND status=$3",
+    values: [email, hash, "pending_validation"],
   });
 
   if (result.rowCount === 0) {
@@ -105,8 +115,8 @@ const verifyEmail = async (email, hash) => {
   const user = result.rows[0];
 
   const updateResult = await pool.query({
-    text: "UPDATE users SET active = $1 WHERE id = $2",
-    values: [true, user.id],
+    text: "UPDATE users SET status = $1 WHERE id = $2",
+    values: ["active", user.id],
   });
 
   return {
@@ -131,6 +141,11 @@ const forgotPassword = async (email) => {
     expiresIn: "1h",
   });
 
+  await pool.query({
+    text: "UPDATE users SET status = $1 WHERE email = $2",
+    values: ['pending_password_reset', email],
+  })
+
   return {
     token,
   };
@@ -140,18 +155,17 @@ const resetPassword = async (token, password) => {
   try {
     const decoded = jwt.verify(token, process.env.JWTSECRET);
 
-
     const saltRounds = 10;
-  
+
     const salt = bcrypt.genSaltSync(saltRounds);
-  
+
     const pwdHash = bcrypt.hashSync(password, salt);
-  
-    const result = await pool.query({
-      text: "UPDATE users SET password = $1 WHERE email = $2",
-      values: [pwdHash, decoded.email],
+
+    await pool.query({
+      text: "UPDATE users SET password = $1, status = $2 WHERE email = $3",
+      values: [pwdHash, "active", decoded.email],
     });
-  
+
     return {
       status: 200,
     };
