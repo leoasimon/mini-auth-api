@@ -58,11 +58,11 @@ const sendResetPasswordEmail = async (email, token) => {
       subject: "Reset Your Password for Mini auth",
       text: ("" + text).replace(
         "YOUR_RESET_PASSWORD_LINK",
-        `${process.env.CLIENT_URL}/reset-password?token=${token}`
+        `${process.env.CLIENT_URL}/check-token?token=${token}`
       ),
       html: ("" + html).replace(
         "YOUR_RESET_PASSWORD_LINK",
-        `${process.env.CLIENT_URL}/reset-password?token=${token}`
+        `${process.env.CLIENT_URL}/check-token?token=${token}`
       ),
     };
 

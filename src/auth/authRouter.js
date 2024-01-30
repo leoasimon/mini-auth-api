@@ -78,6 +78,18 @@ router.post("/reset-password", async (req, res) => {
   return res.status(result.status).json(result.data);
 });
 
+router.get("/check-reset-pwd-token", async (req, res) => {
+  const result = await authService.checkResetPwdToken(req.query.token);
+
+  if (result.error) {
+    return res.status(result.status).json({
+      error: result.error,
+    });
+  }
+
+  return res.status(result.status).send();
+});
+
 module.exports = {
   authRouter: router,
 };

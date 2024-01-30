@@ -143,28 +143,29 @@ const forgotPassword = async (email) => {
 
   await pool.query({
     text: "UPDATE users SET status = $1 WHERE email = $2",
-    values: ['pending_password_reset', email],
-  })
+    values: ["pending_password_reset", email],
+  });
 
   return {
     token,
   };
 };
 
-const resetPassword = async (token, password) => {
+const checkResetPwdToken = async (token) => {
   try {
     const decoded = jwt.verify(token, process.env.JWTSECRET);
 
-    const saltRounds = 10;
-
-    const salt = bcrypt.genSaltSync(saltRounds);
-
-    const pwdHash = bcrypt.hashSync(password, salt);
-
-    await pool.query({
-      text: "UPDATE users SET password = $1, status = $2 WHERE email = $3",
-      values: [pwdHash, "active", decoded.email],
+    const result = await pool.query({
+      text: "SELECT * FROM users WHERE email = $1 AND status = $2",
+      values: [decoded.email, "pending_password_reset"],
     });
+
+    if (result.rowCount === 0) {
+      return {
+        status: 404,
+        error: "This token is invalid or has expired",
+      };
+    }
 
     return {
       status: 200,
@@ -177,10 +178,34 @@ const resetPassword = async (token, password) => {
   }
 };
 
+const resetPassword = async (token, password) => {
+  const checked = await checkResetPwdToken(token);
+
+  if (checked.status !== 200) {
+    return checked;
+  }
+
+  const saltRounds = 10;
+
+  const salt = bcrypt.genSaltSync(saltRounds);
+
+  const pwdHash = bcrypt.hashSync(password, salt);
+
+  await pool.query({
+    text: "UPDATE users SET password = $1, status = $2 WHERE email = $3",
+    values: [pwdHash, "active", decoded.email],
+  });
+
+  return {
+    status: 200,
+  };
+};
+
 module.exports = {
   signup,
   signin,
   verifyEmail,
   forgotPassword,
   resetPassword,
+  checkResetPwdToken
 };
